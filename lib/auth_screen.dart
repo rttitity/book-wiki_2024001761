@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'utils/toast.dart';
+import 'verification_screen.dart';
+
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({Key? key}) : super(key: key);
@@ -31,9 +33,15 @@ class AuthScreenState extends State<AuthScreen> {
 
   void signUp() async {
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
       FirebaseAuth.instance.currentUser?.sendEmailVerification();
-      showToast('Verification email sent. Please check your inbox.');
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const VerificationScreen()),
+      );
     } catch (e) {
       showToast('Sign-up failed: $e');
     }

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'auth_screen.dart';
 import 'list_screen.dart';
 import 'firebase_options.dart';
+import 'verification_screen.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +24,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/auth': (context) => const AuthScreen(),
         '/list': (context) => const ListScreen(),
+        '/verification': (context) => const VerificationScreen(),
       },
     );
   }
