@@ -14,52 +14,140 @@ class BookDetailScreen extends StatefulWidget {
 
 class _BookDetailScreenState extends State<BookDetailScreen> {
   bool _isLoading = false; // 로딩 상태를 관리하는 변수
+  bool isInCollection = false; // 책이 컬렉션에 저장되어 있는지 확인
+  int recommendCount = 0; // 추천 수
+  bool isRecommended = false; // 추천 여부 확인
 
-  // Firestore에 추천 수를 업데이트하는 함수
-  Future<void> _recommendBook() async {
-    setState(() => _isLoading = true);
-    await FirebaseFirestore.instance.collection('recommended_books').doc(widget.bookData['title']).set({
-      'title': widget.bookData['title'],
-      'thumbnail': widget.bookData['thumbnail'],
-      'recommend_count': FieldValue.increment(1), // 추천 수 증가
-    }, SetOptions(merge: true));
-    setState(() => _isLoading = false);
-
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('책이 추천되었습니다!')));
+  @override
+  void initState() {
+    super.initState();
+    _fetchBookStats(); // Firestore에서 데이터 로드
   }
 
-  // Firestore에 "읽는 중" 데이터를 추가하는 함수
-  Future<void> _addToReadingList() async {
-    setState(() => _isLoading = true);
+  // Firestore에서 추천 수와 컬렉션 상태 가져오기
+  Future<void> _fetchBookStats() async {
+    final bookId = widget.bookData['isbn'] ?? widget.bookData['title'];
     final user = FirebaseAuth.instance.currentUser;
 
+    if (user == null) return;
+
+    final docSnapshot =
+    await FirebaseFirestore.instance.collection('Books').doc(bookId).get();
+
+    final userBooksRef = FirebaseFirestore.instance
+        .collection('UserProfile')
+        .doc(user.uid)
+        .collection('reading_books')
+        .doc(bookId);
+
+    final userRecommendedRef = FirebaseFirestore.instance
+        .collection('Books')
+        .doc(bookId)
+        .collection('recommended_by')
+        .doc(user.uid);
+
+    final isBookInCollection = await userBooksRef.get();
+    final isUserRecommended = await userRecommendedRef.get();
+
+    if (docSnapshot.exists) {
+      setState(() {
+        recommendCount = docSnapshot.data()?['recommend_count'] ?? 0;
+        isInCollection = isBookInCollection.exists;
+        isRecommended = isUserRecommended.exists;
+      });
+    }
+  }
+
+  // 추천 기능: 중복 방지 및 UID 등록
+  Future<void> _recommendBook() async {
+    final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('로그인이 필요합니다!')),
       );
+      return;
+    }
+
+    final bookId = widget.bookData['isbn'] ?? widget.bookData['title'];
+    final userRecommendedRef = FirebaseFirestore.instance
+        .collection('Books')
+        .doc(bookId)
+        .collection('recommended_by')
+        .doc(user.uid);
+
+    if (isRecommended) {
+      // 추천 취소
+      await userRecommendedRef.delete();
+      await FirebaseFirestore.instance.collection('Books').doc(bookId).update({
+        'recommend_count': FieldValue.increment(-1),
+      });
+      setState(() {
+        recommendCount -= 1;
+        isRecommended = false;
+      });
+    } else {
+      // 추천 등록
+      await userRecommendedRef.set({'recommended_at': DateTime.now().toIso8601String()});
+      await FirebaseFirestore.instance.collection('Books').doc(bookId).set({
+        'title': widget.bookData['title'],
+        'thumbnail': widget.bookData['thumbnail'],
+        'recommend_count': FieldValue.increment(1),
+      }, SetOptions(merge: true));
+      setState(() {
+        recommendCount += 1;
+        isRecommended = true;
+      });
+    }
+  }
+
+  // 책 읽기 기능: 중복 방지 및 UID 등록
+  Future<void> _startReadingBook() async {
+    setState(() => _isLoading = true);
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      // rootContext를 사용하여 SnackBar 표시
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(Navigator.of(context).overlay!.context).showSnackBar(
+          const SnackBar(content: Text('로그인이 필요합니다!')),
+        );
+      });
       setState(() => _isLoading = false);
       return;
     }
 
-    final uid = user.uid; // UID 가져오기
+    final uid = user.uid;
 
-    await FirebaseFirestore.instance
-        .collection('UserProfile') // 최상위 컬렉션
-        .doc(uid) // 사용자 UID 문서
-        .collection('reading_books') // 하위 컬렉션
-        .add({
-      'title': widget.bookData['title'],
-      'thumbnail': widget.bookData['thumbnail'],
-      'added_at': DateFormat("yyyy-MM-dd HH:mm:ss").format(DateTime.now()), // 읽기 시작 시간
-    });
+    try {
+      await FirebaseFirestore.instance
+          .collection('UserProfile')
+          .doc(uid)
+          .collection('reading_books')
+          .add({
+        'title': widget.bookData['title'],
+        'thumbnail': widget.bookData['thumbnail'],
+        'added_at': DateTime.now().toIso8601String(),
+        'status': 'reading',
+      });
 
-    setState(() => _isLoading = false);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('책이 읽는 중에 추가되었습니다!')),
-    );
+      // rootContext를 사용하여 SnackBar 표시
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(Navigator.of(context).overlay!.context).showSnackBar(
+          const SnackBar(content: Text('책을 읽는 중으로 설정했습니다!')),
+        );
+      });
+    } catch (e) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(Navigator.of(context).overlay!.context).showSnackBar(
+          SnackBar(content: Text('오류가 발생했습니다: $e')),
+        );
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -72,41 +160,31 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center, // 중앙 정렬
             children: [
               Center(
                 child: Image.network(
-                  widget.bookData['thumbnail'],
+                  widget.bookData['thumbnail'] ?? '',
                   height: 200,
                 ),
               ),
               const SizedBox(height: 20),
               Text('제목: ${widget.bookData['title']}',
                   style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              Text('저자: ${widget.bookData['authors']}'),
-              Text('가격: ${widget.bookData['sale_price']}'),
-              Text('출판 상태: ${widget.bookData['status']}'),
-              Text('ISBN: ${widget.bookData['isbn']}'),
-              const SizedBox(height: 50), // 버튼과 위 텍스트 사이 여백
-              if (_isLoading) // 로딩 중일 때 프로그레스 인디케이터 표시
-                const Center(child: CircularProgressIndicator())
-              else
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center, // 버튼을 중앙 정렬
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: _recommendBook,
-                      icon: const Icon(Icons.favorite, color: Colors.red),
-                      label: const Text('추천'),
-                    ),
-                    const SizedBox(height: 20), // 버튼 간 간격
-                    ElevatedButton.icon(
-                      onPressed: _addToReadingList,
-                      icon: const Icon(Icons.menu_book, color: Colors.blue),
-                      label: const Text('책 읽기'),
-                    ),
-                  ],
+              Text('추천 수: $recommendCount'),
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                onPressed: _recommendBook,
+                icon: Icon(
+                  isRecommended ? Icons.favorite : Icons.favorite_border,
+                  color: Colors.red,
                 ),
+                label: Text(isRecommended ? '추천 취소' : '추천'),
+              ),
+              ElevatedButton.icon(
+                onPressed: _isLoading ? null : _startReadingBook,
+                icon: const Icon(Icons.menu_book, color: Colors.blue),
+                label: const Text('책 읽기'),
+              ),
             ],
           ),
         ),
