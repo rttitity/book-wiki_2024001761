@@ -1,11 +1,11 @@
+import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/material.dart';
+import 'User_profile_screen/profile_screen.dart';
+import 'list_screen.dart'; // 기존 게시판 화면
 import 'auth_screen.dart';
-import 'list_screen.dart';
 import 'firebase_options.dart';
 import 'verification_screen.dart';
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,13 +19,54 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Firebase App',
+      title: 'BookWiki',
       initialRoute: FirebaseAuth.instance.currentUser == null ? '/auth' : '/list',
       routes: {
         '/auth': (context) => const AuthScreen(),
-        '/list': (context) => const ListScreen(),
+        '/list': (context) => const HomeScreen(),
         '/verification': (context) => const VerificationScreen(),
       },
+    );
+  }
+}
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({Key? key}) : super(key: key);
+
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _currentIndex = 0;
+
+  final List<Widget> _pages = [
+    const ListScreen(),
+    const ProfileScreen(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: _pages[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.list),
+            label: '게시판',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: '프로필',
+          ),
+        ],
+      ),
     );
   }
 }

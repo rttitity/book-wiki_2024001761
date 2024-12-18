@@ -24,10 +24,10 @@ class AuthScreenState extends State<AuthScreen> {
       if (FirebaseAuth.instance.currentUser?.emailVerified ?? false) {
         Navigator.pushReplacementNamed(context, '/list');
       } else {
-        showToast('Please verify your email');
+        showLoginToast('Please verify your email');
       }
     } catch (e) {
-      showToast('Login failed: $e');
+      showLoginToast('Login failed: $e');
     }
   }
 
@@ -43,7 +43,7 @@ class AuthScreenState extends State<AuthScreen> {
         MaterialPageRoute(builder: (context) => const VerificationScreen()),
       );
     } catch (e) {
-      showToast('Sign-up failed: $e');
+      showLoginToast('Sign-up failed: $e');
     }
   }
 
