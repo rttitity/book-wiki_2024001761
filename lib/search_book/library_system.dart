@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'book_detail_screen.dart'; // 수정된 BookDetailScreen import
+import 'package:book_wiki/search_book//book_detail_screen.dart'; // 수정된 BookDetailScreen import
 import 'package:flutter_dotenv/flutter_dotenv.dart'; // dotenv 패키지 추가 => 카카오 API key 때문
 
 

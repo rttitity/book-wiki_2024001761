@@ -46,4 +46,6 @@ app.*.map.json
 /lib/firebase_options.dart
 /android/app/google-services.json
 /ios/Runner/GoogleService-Info.plist
+
+# 환경변수 파일
 .env

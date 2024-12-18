@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'models/content.dart';
-import 'input_screen.dart';
+import '../models/content.dart';
+import 'package:book_wiki/built_in_screen//input_screen.dart';
 
 class ListScreen extends StatefulWidget {
   const ListScreen({Key? key}) : super(key: key);
@@ -12,10 +12,10 @@ class ListScreen extends StatefulWidget {
 }
 
 class _ListScreenState extends State<ListScreen> {
-  // Firestore에서 contents 컬렉션 가져오기 (오름차순 정렬)
+  // Firestore에서 contents 컬렉션 가져오기 (내침차순 정렬)
   final contentsRef = FirebaseFirestore.instance
       .collection('contents')
-      .orderBy('date', descending: false)
+      .orderBy('date', descending: true)
       .withConverter<Content>(
     fromFirestore: (snapshots, _) => Content.fromJson(snapshots.data()!),
     toFirestore: (content, _) => content.toJson(),

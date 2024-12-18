@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'User_profile_screen/profile_screen.dart';
-import 'list_screen.dart'; // 독후감 게시판 위젯
-import 'auth_screen.dart';
+import 'built_in_screen/list_screen.dart'; // 독후감 게시판 위젯
+import 'login_screen/auth_screen.dart';
 import 'firebase_options.dart';
-import 'verification_screen.dart';
-import 'library_system.dart';   // 도서 검색 화면 위젯
+import 'package:book_wiki/login_screen/verification_screen.dart';
+import 'search_book/library_system.dart';   // 도서 검색 화면 위젯
 import 'package:flutter_dotenv/flutter_dotenv.dart'; // dotenv 패키지 추가 => 카카오 API key 때문
 
 

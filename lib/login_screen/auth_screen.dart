@@ -2,8 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Firestore 추가
-import 'utils/toast.dart';
-import 'verification_screen.dart';
+import '/utils/toast.dart';
+import 'package:book_wiki/login_screen//verification_screen.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({Key? key}) : super(key: key);
@@ -20,13 +20,20 @@ class AuthScreenState extends State<AuthScreen> {
 
   void signIn() async {
     try {
+      // 비동기 방식으로 로그인 요청
       await FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password);
+
+      // 이메일 인증 되었는지 확인
       if (FirebaseAuth.instance.currentUser?.emailVerified ?? false) {
         Navigator.pushReplacementNamed(context, '/list');
-      } else {
+      }
+      else {
         showLoginToast('Please verify your email');
       }
-    } catch (e) {
+    }
+
+    // 에러 예외 처리: 로그 Toast로 출력
+    catch (e) {
       showLoginToast('Login failed: $e');
     }
   }

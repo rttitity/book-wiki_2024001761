@@ -94,6 +94,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ? const Center(child: CircularProgressIndicator())
             : Column(
           children: [
+
             // 사용자 프로필 정보
             const SizedBox(height: 20),
             Row(
