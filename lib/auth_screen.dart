@@ -1,9 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Firestore 추가
 import 'utils/toast.dart';
 import 'verification_screen.dart';
-
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({Key? key}) : super(key: key);
@@ -33,10 +33,21 @@ class AuthScreenState extends State<AuthScreen> {
 
   void signUp() async {
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
+
+      // Firestore에 UID와 이메일 등록
+      final user = userCredential.user;
+      if (user != null) {
+        await FirebaseFirestore.instance.collection('UserProfile').doc(user.uid).set({
+          'email': user.email,
+          'created_at': DateTime.now().toIso8601String(), // 계정 생성 시간
+        });
+      }
+
+      // 이메일 인증 보내기
       FirebaseAuth.instance.currentUser?.sendEmailVerification();
       Navigator.pushReplacement(
         context,

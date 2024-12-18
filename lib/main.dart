@@ -7,10 +7,13 @@ import 'auth_screen.dart';
 import 'firebase_options.dart';
 import 'verification_screen.dart';
 import 'library_system.dart';   // 도서 검색 화면 위젯
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // dotenv 패키지 추가 => 카카오 API key 때문
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await dotenv.load(fileName: ".env"); // .env 파일 로드
   runApp(const MyApp());
 }
 

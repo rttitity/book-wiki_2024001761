@@ -37,7 +37,7 @@ class _ListScreenState extends State<ListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Posts'),
+        title: const Text('도서 게시판'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
