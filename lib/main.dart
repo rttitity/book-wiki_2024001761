@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'User_profile_screen/profile_screen.dart';
-import 'list_screen.dart'; // 기존 게시판 화면
+import 'list_screen.dart'; // 독후감 게시판 위젯
 import 'auth_screen.dart';
 import 'firebase_options.dart';
 import 'verification_screen.dart';
+import 'library_system.dart';   // 도서 검색 화면 위젯
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,6 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _pages = [
     const ListScreen(),
+    const HttpApp(), // 도서 검색 화면 추가
     const ProfileScreen(),
   ];
 
@@ -60,6 +62,10 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.list),
             label: '게시판',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.search),
+            label: '검색',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
